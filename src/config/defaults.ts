@@ -1,0 +1,42 @@
+import type { AnonymizeConfig } from './schema.js';
+
+export const DEFAULT_CONFIG: AnonymizeConfig = {
+  locale: 'pt_BR',
+  rules: [
+    {
+      id: 'name',
+      columns: ['nome', 'name', 'nome_completo', 'full_name', 'nome completo', 'nome do cliente', 'client_name', 'nome_cliente'],
+      generator: 'faker.person.fullName()',
+    },
+    {
+      id: 'cpf',
+      columns: ['cpf', 'cpf_cnpj', 'documento', 'cpf do cliente'],
+      generator: "faker.helpers.replaceSymbols('###.###.###-##')",
+    },
+    {
+      id: 'cnpj',
+      columns: ['cnpj', 'cnpj_empresa'],
+      generator: "faker.helpers.replaceSymbols('##.###.###/####-##')",
+    },
+    {
+      id: 'email',
+      columns: ['email', 'e-mail', 'email_address', 'correio', 'e_mail'],
+      generator: 'faker.internet.email()',
+    },
+    {
+      id: 'address',
+      columns: ['endereco', 'endereço', 'address', 'logradouro', 'rua', 'endereco_completo'],
+      generator: 'faker.location.streetAddress({ useFullAddress: true })',
+    },
+    {
+      id: 'zipcode',
+      columns: ['cep', 'zip', 'zipcode', 'codigo_postal', 'zip_code'],
+      generator: "faker.location.zipCode('#####-###')",
+    },
+    {
+      id: 'phone',
+      columns: ['telefone', 'phone', 'celular', 'tel', 'fone', 'mobile', 'whatsapp'],
+      generator: 'faker.phone.number()',
+    },
+  ],
+};
