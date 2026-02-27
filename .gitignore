@@ -2,5 +2,6 @@ node_modules/
 dist/
 *.tgz
 .taskmanager/
+.worktrees/
 tests/output/*
 !tests/output/.gitkeep
