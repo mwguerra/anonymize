@@ -8,7 +8,8 @@ import { FileNotFoundError, UnsupportedFormatError } from '../../src/utils/error
 
 XLSX.set_fs(fs);
 
-const FIXTURES = join(import.meta.dirname, '..', 'fixtures');
+const INPUT = join(import.meta.dirname, '..', 'input');
+const OUTPUT = join(import.meta.dirname, '..', 'output');
 const tmpFiles: string[] = [];
 
 afterEach(() => {
@@ -18,26 +19,26 @@ afterEach(() => {
   tmpFiles.length = 0;
 });
 
-function tmpFile(name: string): string {
-  const p = join(FIXTURES, name);
+function tmp(name: string): string {
+  const p = join(OUTPUT, name);
   tmpFiles.push(p);
   return p;
 }
 
 describe('readFile (unified reader)', () => {
   it('should read CSV files', () => {
-    const sheets = readFile(join(FIXTURES, 'sample-comma.csv'));
-    expect(sheets[0].headers).toEqual(['nome', 'email', 'cpf']);
+    const sheets = readFile(join(INPUT, 'sample-comma.csv'));
+    expect(sheets[0].headers).toEqual(['nome', 'email', 'cpf', 'cidade', 'valor']);
   });
 
   it('should read XLSX files', () => {
-    const xlsxPath = tmpFile('reader-test.xlsx');
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['a'], [1]]), 'S1');
-    XLSX.writeFile(wb, xlsxPath);
+    const sheets = readFile(join(INPUT, 'sample.xlsx'));
+    expect(sheets[0].headers).toEqual(['nome', 'email', 'cpf', 'cidade', 'valor']);
+  });
 
-    const sheets = readFile(xlsxPath);
-    expect(sheets[0].headers).toEqual(['a']);
+  it('should read XLS files', () => {
+    const sheets = readFile(join(INPUT, 'sample.xls'));
+    expect(sheets[0].headers).toEqual(['nome', 'email', 'cpf']);
   });
 
   it('should throw FileNotFoundError for missing files', () => {
@@ -45,7 +46,7 @@ describe('readFile (unified reader)', () => {
   });
 
   it('should throw UnsupportedFormatError for .json', () => {
-    const jsonPath = tmpFile('bad.json');
+    const jsonPath = tmp('bad.json');
     fs.writeFileSync(jsonPath, '{}');
     expect(() => readFile(jsonPath)).toThrow(UnsupportedFormatError);
   });
@@ -53,7 +54,7 @@ describe('readFile (unified reader)', () => {
 
 describe('writeFile (unified writer)', () => {
   it('should write CSV files', () => {
-    const outPath = tmpFile('out.csv');
+    const outPath = tmp('out.csv');
     writeFile(outPath, [{ name: 'Sheet1', headers: ['a', 'b'], rows: [['1', '2']] }]);
     const content = fs.readFileSync(outPath, 'utf-8');
     expect(content).toContain('a,b');
@@ -61,7 +62,7 @@ describe('writeFile (unified writer)', () => {
   });
 
   it('should write XLSX files', () => {
-    const outPath = tmpFile('out.xlsx');
+    const outPath = tmp('out.xlsx');
     writeFile(outPath, [
       { name: 'S1', headers: ['x', 'y'], rows: [['a', 'b']] },
       { name: 'S2', headers: ['z'], rows: [['c']] },
@@ -74,7 +75,7 @@ describe('writeFile (unified writer)', () => {
   });
 
   it('should preserve delimiter in CSV', () => {
-    const outPath = tmpFile('out-semi.csv');
+    const outPath = tmp('out-semi.csv');
     writeFile(outPath, [{ name: 'Sheet1', headers: ['a', 'b'], rows: [['1', '2']] }], { delimiter: ';' });
     const content = fs.readFileSync(outPath, 'utf-8');
     expect(content).toContain('a;b');
