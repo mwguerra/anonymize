@@ -30,10 +30,10 @@ npm install
 npm run build          # tsup bundles ESM to dist/ (deps externalized)
 
 # Run locally (dev)
-npx tsx src/index.ts ./file.xlsx
+npx tsx src/index.ts run ./file.xlsx
 
 # Run built CLI
-node dist/index.js ./file.xlsx
+node dist/index.js run ./file.xlsx
 
 # Tests (Vitest)
 npm test               # vitest run (single pass)
@@ -49,9 +49,14 @@ npm run lint:fix
 
 ```
 src/
-├── index.ts              # CLI entry point — wires commander to the orchestrator
+├── index.ts              # CLI entry point — thin registrar: creates program, registers commands, calls parse()
+├── commands/
+│   ├── run.ts            # `anonymize run <file>` — main anonymization command
+│   ├── inspect.ts        # `anonymize inspect <file>` — show detected columns without modifying
+│   ├── config-init.ts    # `anonymize config:init` — scaffold .anonymizerc.json from defaults
+│   └── config-show.ts    # `anonymize config:show` — display resolved configuration
 ├── cli/
-│   ├── commands.ts       # commander flag/arg definitions
+│   ├── shared-options.ts # Reusable option helpers: addFileInputOptions, addOutputOptions, addVerbosityOptions
 │   ├── confirmation.ts   # inquirer interactive prompts (column confirmation/editing)
 │   ├── table-display.ts  # cli-table3 detection table rendering
 │   └── progress.ts       # cli-progress bar during processing
@@ -83,7 +88,16 @@ src/
 - **Never modify the original file.** Output goes to `<name>.anonymized.<ext>` by default.
 - **Collision handling:** If faker generates a value already mapped to a different original, retry up to 10 times, then use the last attempt with a warning.
 
-## CLI Flags Reference
+## CLI Commands
+
+| Command | Purpose |
+|---|---|
+| `anonymize run <file>` | Anonymize a file (main command) |
+| `anonymize inspect <file>` | Show detected columns without modifying anything |
+| `anonymize config:init` | Scaffold `.anonymizerc.json` in current directory |
+| `anonymize config:show` | Display resolved configuration |
+
+## CLI Flags Reference (`run`)
 
 | Flag | Alias | Default |
 |---|---|---|

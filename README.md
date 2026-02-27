@@ -13,35 +13,54 @@ npm install -g @mwguerra/anonymize
 Ou execute diretamente:
 
 ```bash
-npx @mwguerra/anonymize ./clientes.xlsx
+npx @mwguerra/anonymize run ./clientes.xlsx
 ```
 
 ## Uso
 
 ```bash
-anonymize <arquivo> [opções]
+anonymize <comando> [opções]
 ```
+
+### Comandos
+
+| Comando | Descrição |
+|---|---|
+| `anonymize run <arquivo>` | Anonimizar um arquivo (comando principal) |
+| `anonymize inspect <arquivo>` | Mostrar colunas detectadas sem modificar nada |
+| `anonymize config:init` | Criar `.anonymizerc.json` no diretório atual |
+| `anonymize config:show` | Exibir configuração resolvida |
 
 ### Exemplos
 
 ```bash
 # Anonimizar CSV (interativo)
-anonymize ./dados.csv
+anonymize run ./dados.csv
 
 # Anonimizar XLSX com saída customizada
-anonymize ./clientes.xlsx --output ./clientes-safe.xlsx
+anonymize run ./clientes.xlsx --output ./clientes-safe.xlsx
 
 # Modo não-interativo (CI/CD)
-anonymize ./export.xlsx --yes --output ./export-safe.xlsx
+anonymize run ./export.xlsx --yes --output ./export-safe.xlsx
 
 # Dry run — ver plano sem modificar
-anonymize ./clientes.csv --dry-run
+anonymize run ./clientes.csv --dry-run
 
 # Config customizada com locale inglês
-anonymize ./customers.csv --config ./my-rules.json --locale en_US
+anonymize run ./customers.csv --config ./my-rules.json --locale en_US
+
+# Inspecionar colunas detectadas
+anonymize inspect ./clientes.csv
+
+# Criar arquivo de configuração
+anonymize config:init
+
+# Ver configuração resolvida
+anonymize config:show
+anonymize config:show --config ./my-rules.json
 ```
 
-## Flags
+## Flags (`run`)
 
 | Flag | Alias | Descrição | Default |
 |---|---|---|---|
