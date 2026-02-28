@@ -5,3 +5,5 @@ dist/
 .worktrees/
 tests/examples/single_files/output/*
 !tests/examples/single_files/output/.gitkeep
+tests/examples/folders/output/*
+!tests/examples/folders/output/.gitkeep

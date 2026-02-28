@@ -51,7 +51,7 @@ npm run lint:fix
 src/
 ├── index.ts              # CLI entry point — thin registrar: creates program, registers commands, calls parse()
 ├── commands/
-│   ├── run.ts            # `anonymize run <file>` — main anonymization command
+│   ├── run.ts            # `anonymize run <path>` — anonymize a file or directory
 │   ├── inspect.ts        # `anonymize inspect <file>` — show detected columns without modifying
 │   ├── config-init.ts    # `anonymize config:init` — scaffold .anonymizerc.json from defaults
 │   └── config-show.ts    # `anonymize config:show` — display resolved configuration
@@ -65,7 +65,8 @@ src/
 │   ├── detector.ts       # Matches column names against config rules (case-insensitive partial match)
 │   ├── cache.ts          # Global Map<ruleId, Map<originalValue, fakeValue>> — cross-sheet consistency
 │   ├── anonymize-cell.ts # Cell-level anonymization with cache lookup + collision retry
-│   └── generator.ts      # faker wrapper + eval of generator expressions from config
+│   ├── generator.ts      # faker wrapper + eval of generator expressions from config
+│   └── folder-anonymizer.ts # Recursive folder anonymization: walks tree, anonymizes supported files, copies the rest
 ├── io/
 │   ├── reader.ts         # Unified file reader (CSV via papaparse, XLS/XLSX via SheetJS)
 │   ├── writer.ts         # Unified file writer — preserves structure, formatting, sheet order
@@ -87,12 +88,13 @@ src/
 - **Config precedence:** `--config` flag → `.anonymizerc.json` in input file's directory → `.anonymizerc.json` in `$HOME` → built-in defaults.
 - **Never modify the original file.** Output goes to `<name>.anonymized.<ext>` by default.
 - **Collision handling:** If faker generates a value already mapped to a different original, retry up to 10 times, then use the last attempt with a warning.
+- **Folder anonymization** walks the input tree file-by-file (not copy-then-modify). Supported files (.csv, .xls, .xlsx) are anonymized to the output directory; unsupported files are copied as-is. Files with no detected sensitive columns are also copied unchanged. `--output` is required for directory input.
 
 ## CLI Commands
 
 | Command | Purpose |
 |---|---|
-| `anonymize run <file>` | Anonymize a file (main command) |
+| `anonymize run <path>` | Anonymize a file or directory (main command) |
 | `anonymize inspect <file>` | Show detected columns without modifying anything |
 | `anonymize config:init` | Scaffold `.anonymizerc.json` in current directory |
 | `anonymize config:show` | Display resolved configuration |

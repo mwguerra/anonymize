@@ -2,7 +2,7 @@ import type { Command } from 'commander';
 
 export function addFileInputOptions(cmd: Command): Command {
   return cmd
-    .argument('<file>', 'Input file path (.csv, .xls, .xlsx)')
+    .argument('<path>', 'Input file (.csv, .xls, .xlsx) or directory')
     .option('-e, --encoding <encoding>', 'Force CSV encoding (overrides auto-detection)')
     .option('--delimiter <char>', 'Force CSV delimiter (overrides auto-detection)')
     .option('-c, --config <path>', 'Configuration file path')

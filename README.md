@@ -26,7 +26,7 @@ anonymize <comando> [opções]
 
 | Comando | Descrição |
 |---|---|
-| `anonymize run <arquivo>` | Anonimizar um arquivo (comando principal) |
+| `anonymize run <caminho>` | Anonimizar um arquivo ou diretório (comando principal) |
 | `anonymize inspect <arquivo>` | Mostrar colunas detectadas sem modificar nada |
 | `anonymize config:init` | Criar `.anonymizerc.json` no diretório atual |
 | `anonymize config:show` | Exibir configuração resolvida |
@@ -48,6 +48,12 @@ anonymize run ./clientes.csv --dry-run
 
 # Config customizada com locale inglês
 anonymize run ./customers.csv --config ./my-rules.json --locale en_US
+
+# Anonimizar diretório inteiro (requer --output)
+anonymize run ./dados/ --output ./dados-safe/ --yes
+
+# Dry run em diretório — ver plano sem modificar
+anonymize run ./dados/ --output ./dados-safe/ --dry-run
 
 # Inspecionar colunas detectadas
 anonymize inspect ./clientes.csv
@@ -130,12 +136,20 @@ O campo `generator` aceita qualquer expressão válida do `@faker-js/faker`:
 
 ## Como Funciona
 
+### Arquivo único
 1. Lê o arquivo de entrada (CSV, XLS ou XLSX)
 2. Detecta colunas sensíveis comparando nomes com as regras (case-insensitive, match parcial)
 3. Exibe tabela de detecção para confirmação (pular com `--yes`)
 4. Percorre cada célula marcada, substituindo por valores fake via `@faker-js/faker`
 5. Mantém cache global: o mesmo valor original → mesmo valor fake (inclusive entre abas)
 6. Gera arquivo de saída preservando estrutura e formatação
+
+### Diretório
+1. Percorre recursivamente o diretório de entrada
+2. Replica a estrutura de pastas no diretório de saída
+3. Arquivos suportados (.csv, .xls, .xlsx) são anonimizados individualmente
+4. Arquivos não suportados (ex: .md, .txt, .pdf) são copiados sem alteração
+5. Confirmação interativa é desabilitada no modo diretório (equivalente a `--yes`)
 
 ## Segurança
 
