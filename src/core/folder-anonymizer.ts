@@ -16,6 +16,7 @@ export interface FolderAnonymizeOptions {
   noOverwrite?: boolean;
   verbose?: boolean;
   silent?: boolean;
+  identityColumn?: string;
 }
 
 export interface FolderAnonymizeResult {
@@ -92,6 +93,7 @@ export async function anonymizeFolder(options: FolderAnonymizeOptions): Promise<
         noOverwrite: options.noOverwrite,
         verbose: false,
         silent: true,
+        identityColumn: options.identityColumn,
       };
 
       const fileResult = await anonymize(fileOptions);

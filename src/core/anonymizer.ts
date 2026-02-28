@@ -4,7 +4,7 @@ import { loadConfig, type LoadConfigOptions } from '../config/loader.js';
 import { readFile } from '../io/reader.js';
 import { writeFile } from '../io/writer.js';
 import type { Sheet, ColumnMapping } from '../io/types.js';
-import { detectColumns } from './detector.js';
+import { detectColumns, type DetectColumnsOptions } from './detector.js';
 import { AnonymizationCache } from './cache.js';
 import { FakeValueGenerator, createFaker } from './generator.js';
 import { anonymizeCell, type AnonymizeCellDeps } from './anonymize-cell.js';
@@ -25,6 +25,7 @@ export interface AnonymizeOptions {
   noOverwrite?: boolean;
   verbose?: boolean;
   silent?: boolean;
+  identityColumn?: string;
 }
 
 export type ConfirmResult =
@@ -86,8 +87,13 @@ export async function anonymize(options: AnonymizeOptions, hooks?: AnonymizeHook
   });
   logger.info(`Read ${sheets.length} sheet(s) from ${options.inputPath}`);
 
-  // 3. Detect sensitive columns
-  let mappings = detectColumns(sheets, config.rules);
+  // 3. Detect sensitive columns (with overrides and identity)
+  const detectOpts: DetectColumnsOptions = {
+    columnOverrides: config.columnOverrides,
+    fileContext: basename(options.inputPath),
+    identityColumnOverride: options.identityColumn,
+  };
+  let mappings = detectColumns(sheets, config.rules, detectOpts);
   logger.info(`Detected ${mappings.length} sensitive column(s)`);
 
   // 4. Dry run — return early
@@ -161,13 +167,34 @@ export async function anonymize(options: AnonymizeOptions, hooks?: AnonymizeHook
     logger.debug(`Processing sheet "${sheet.name}": ${sheet.rows.length} rows, ${sheetMappings.length} columns`);
     progress?.start(sheet.name, sheet.rows.length);
 
+    // Collect all identity column indices used in this sheet (for pre-reading)
+    const identityIndices = new Set<number>();
+    for (const m of sheetMappings) {
+      if (m.identityColumnIndex !== undefined) {
+        identityIndices.add(m.identityColumnIndex);
+      }
+    }
+
     for (const row of sheet.rows) {
+      // Pre-read identity values BEFORE any cell is modified
+      const identityValues = new Map<number, string>();
+      for (const idx of identityIndices) {
+        const val = row[idx];
+        if (val !== null && val !== undefined) {
+          identityValues.set(idx, String(val));
+        }
+      }
+
       for (const mapping of sheetMappings) {
         const original = row[mapping.columnIndex];
         if (original === null || original === undefined) continue;
 
         const originalStr = String(original);
-        const fake = anonymizeCell(deps, mapping.ruleId, mapping.generatorExpression, originalStr);
+        const identityValue = mapping.identityColumnIndex !== undefined
+          ? identityValues.get(mapping.identityColumnIndex)
+          : undefined;
+
+        const fake = anonymizeCell(deps, mapping.ruleId, mapping.generatorExpression, originalStr, identityValue);
         if (fake !== originalStr) {
           row[mapping.columnIndex] = fake;
           totalCellsAnonymized++;

@@ -8,12 +8,49 @@ import { anonymizeMultipleFiles, type MultiFileAnonymizeOptions } from '../core/
 import { AnonymizeError } from '../utils/errors.js';
 import { GeneratorError } from '../core/generator.js';
 import { buildDisplayRows, renderDetectionTable } from '../cli/table-display.js';
-import { confirmDetection, editMappings } from '../cli/confirmation.js';
+import { confirmDetection, editMappings, confirmIdentityConflict } from '../cli/confirmation.js';
 import { createProgressTracker } from '../cli/progress.js';
+import { loadConfig } from '../config/loader.js';
 import type { Sheet, ColumnMapping } from '../io/types.js';
 import type { RuleConfig } from '../config/schema.js';
 
-function parseRunOptions(cmd: Command): AnonymizeOptions {
+async function resolveIdentityColumn(
+  cmd: Command,
+  inputFilePath: string,
+): Promise<string | undefined> {
+  const opts = cmd.opts();
+  const cliIdentity: string | undefined = opts.identityColumn;
+
+  if (!cliIdentity) return undefined;
+
+  // Load config to check for conflicts
+  const config = loadConfig({
+    configPath: opts.config,
+    inputFilePath,
+  });
+
+  const conflictingRules = config.rules
+    .filter((r) => r.identityColumn && r.identityColumn !== cliIdentity)
+    .map((r) => ({ ruleId: r.id, configValue: r.identityColumn! }));
+
+  if (conflictingRules.length === 0) return cliIdentity;
+
+  // With --yes, CLI flag silently wins
+  if (opts.yes || opts.silent) return cliIdentity;
+
+  const action = await confirmIdentityConflict(cliIdentity, conflictingRules);
+
+  if (action === 'quit') {
+    console.log(chalk.yellow('\nAborted.'));
+    process.exit(0);
+  }
+
+  if (action === 'config') return undefined;
+
+  return cliIdentity;
+}
+
+function parseRunOptions(cmd: Command, identityColumn?: string): AnonymizeOptions {
   const opts = cmd.opts();
   const inputPath = cmd.args[0];
 
@@ -29,10 +66,11 @@ function parseRunOptions(cmd: Command): AnonymizeOptions {
     noOverwrite: !opts.overwrite,
     verbose: opts.verbose,
     silent: opts.silent,
+    identityColumn,
   };
 }
 
-function parseFolderOptions(cmd: Command): FolderAnonymizeOptions {
+function parseFolderOptions(cmd: Command, identityColumn?: string): FolderAnonymizeOptions {
   const opts = cmd.opts();
   const inputDir = cmd.args[0];
 
@@ -47,10 +85,11 @@ function parseFolderOptions(cmd: Command): FolderAnonymizeOptions {
     noOverwrite: !opts.overwrite,
     verbose: opts.verbose,
     silent: opts.silent,
+    identityColumn,
   };
 }
 
-function parseMultiFileOptions(cmd: Command): MultiFileAnonymizeOptions {
+function parseMultiFileOptions(cmd: Command, identityColumn?: string): MultiFileAnonymizeOptions {
   const opts = cmd.opts();
   const inputPaths = cmd.args;
 
@@ -66,6 +105,7 @@ function parseMultiFileOptions(cmd: Command): MultiFileAnonymizeOptions {
     noOverwrite: !opts.overwrite,
     verbose: opts.verbose,
     silent: opts.silent,
+    identityColumn,
   };
 }
 
@@ -257,6 +297,8 @@ export function registerRunCommand(program: Command): void {
     const paths = cmd.args;
 
     try {
+      const identityColumn = await resolveIdentityColumn(cmd, paths[0]);
+
       if (paths.length > 1) {
         // Multi-file mode: validate no directories are mixed in
         for (const p of paths) {
@@ -266,14 +308,14 @@ export function registerRunCommand(program: Command): void {
             process.exit(1);
           }
         }
-        await runMultiFile(parseMultiFileOptions(cmd));
+        await runMultiFile(parseMultiFileOptions(cmd, identityColumn));
       } else {
         const stat = statSync(paths[0]);
 
         if (stat.isDirectory()) {
-          await runFolder(parseFolderOptions(cmd));
+          await runFolder(parseFolderOptions(cmd, identityColumn));
         } else {
-          await runFile(parseRunOptions(cmd));
+          await runFile(parseRunOptions(cmd, identityColumn));
         }
       }
     } catch (error) {

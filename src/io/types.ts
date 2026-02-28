@@ -12,4 +12,5 @@ export interface ColumnMapping {
   columnName: string;
   ruleId: string;
   generatorExpression: string;
+  identityColumnIndex?: number;
 }

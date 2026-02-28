@@ -112,6 +112,29 @@ export async function editMappings(
   return newMappings;
 }
 
+export type IdentityConflictAction = 'cli' | 'config' | 'quit';
+
+export async function confirmIdentityConflict(
+  cliValue: string,
+  configRules: Array<{ ruleId: string; configValue: string }>,
+): Promise<IdentityConflictAction> {
+  console.log(`\nIdentity column conflict detected:`);
+  console.log(`  CLI flag: --identity-column ${cliValue}`);
+  for (const { ruleId, configValue } of configRules) {
+    console.log(`  Config rule "${ruleId}": identityColumn = "${configValue}"`);
+  }
+
+  const answer = await select({
+    message: 'How to proceed?',
+    choices: [
+      { value: 'cli' as const, name: `Use CLI flag (${cliValue}) for all rules` },
+      { value: 'config' as const, name: 'Use config values (ignore CLI flag)' },
+      { value: 'quit' as const, name: 'Cancel and exit' },
+    ],
+  });
+  return answer;
+}
+
 async function selectRule(rules: RuleConfig[]): Promise<string | null> {
   const ruleId = await select({
     message: 'Selecione a regra:',

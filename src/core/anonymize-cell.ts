@@ -10,17 +10,24 @@ export interface AnonymizeCellDeps {
   logger: Logger;
 }
 
+export function composeCacheKey(original: string, identityValue?: string): string {
+  return identityValue ? `${identityValue}::${original}` : original;
+}
+
 export function anonymizeCell(
   deps: AnonymizeCellDeps,
   ruleId: string,
   expression: string,
   original: string | null | undefined,
+  identityValue?: string,
 ): string | null | undefined {
   if (original === null || original === undefined || original.trim() === '') {
     return original;
   }
 
-  const cached = deps.cache.get(ruleId, original);
+  const cacheKey = composeCacheKey(original, identityValue);
+
+  const cached = deps.cache.get(ruleId, cacheKey);
   if (cached !== undefined) {
     return cached;
   }
@@ -43,6 +50,6 @@ export function anonymizeCell(
     }
   }
 
-  deps.cache.set(ruleId, original, fake);
+  deps.cache.set(ruleId, cacheKey, fake);
   return fake;
 }

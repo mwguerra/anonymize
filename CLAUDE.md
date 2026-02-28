@@ -85,12 +85,13 @@ src/
 
 - **Deterministic cache is per-execution, not persisted.** The global cache (`Map<ruleId, Map<original, fake>>`) ensures the same original value always maps to the same fake value within a single run, across all sheets. It is never written to disk.
 - **Generator expressions are evaluated at runtime** via `new Function()` with only `faker` in scope. This allows user-defined rules in `.anonymizerc.json` but carries eval risk — document accordingly.
-- **Column detection is name-based only** (v1). Matches column header names against `rule.columns` patterns — case-insensitive, partial match (substring).
+- **Column detection** is name-based. Matches column header names against `rule.columns` patterns — case-insensitive, partial match (substring). `columnOverrides` in config can explicitly map rule IDs to column names with file:sheet specificity (priority: overrides > pattern matching).
 - **Config precedence:** `--config` flag → `.anonymizerc.json` in input file's directory → `.anonymizerc.json` in `$HOME` → built-in defaults.
 - **Never modify the original file.** Output goes to `<name>.anonymized.<ext>` by default.
 - **Collision handling:** If faker generates a value already mapped to a different original, retry up to 10 times, then use the last attempt with a warning.
 - **Folder anonymization** walks the input tree file-by-file (not copy-then-modify). Supported files (.csv, .xls, .xlsx) are anonymized to the output directory; unsupported files are copied as-is. Files with no detected sensitive columns are also copied unchanged. `--output` is required for directory input.
 - **Multi-file anonymization** shares a single `AnonymizationCache` and `FakeValueGenerator` across all files, so the same original value maps to the same fake value regardless of which file it appears in. `--output` (directory) is required for multi-file mode. Cannot mix files and directories.
+- **Identity-based grouping** allows differentiating same-name entries by an identity column (e.g., CPF). With `identityColumn` set, the cache key becomes `identityValue::originalValue` instead of just `originalValue`. Configured per-rule in config or globally via `--identity-column` CLI flag. Identity values are pre-read from each row before any cell modification.
 
 ## CLI Commands
 
@@ -112,6 +113,7 @@ src/
 | `--encoding` | `-e` | Auto-detect |
 | `--delimiter` | | Auto-detect |
 | `--locale` | `-l` | `pt_BR` |
+| `--identity-column` | | `undefined` (group anonymization by identity rule) |
 | `--no-overwrite` | | `false` |
 | `--verbose` | `-v` | `false` |
 | `--silent` | `-s` | `false` |

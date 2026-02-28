@@ -6,7 +6,8 @@ export function addFileInputOptions(cmd: Command): Command {
     .option('-e, --encoding <encoding>', 'Force CSV encoding (overrides auto-detection)')
     .option('--delimiter <char>', 'Force CSV delimiter (overrides auto-detection)')
     .option('-c, --config <path>', 'Configuration file path')
-    .option('-l, --locale <locale>', 'Override faker locale');
+    .option('-l, --locale <locale>', 'Override faker locale')
+    .option('--identity-column <ruleId>', 'Group anonymization by identity column (references a rule ID, e.g. "cpf")');
 }
 
 export function addSingleFileInputOptions(cmd: Command): Command {

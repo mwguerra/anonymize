@@ -158,4 +158,24 @@ describe('anonymizeMultipleFiles', () => {
     expect(result.filesAnonymized).toBe(0);
     expect(result.filesSkipped).toBe(2);
   });
+
+  it('should support identity column in multi-file mode', async () => {
+    const outputDir = tmpOut();
+    await anonymizeMultipleFiles({
+      inputPaths: [CSV_PATH, XLSX_PATH],
+      outputDir,
+      silent: true,
+      identityColumn: 'cpf',
+    });
+
+    // Read anonymized CSV
+    const csvContent = readFileSync(join(outputDir, 'sample-comma.csv'), 'utf-8');
+    const csvLines = csvContent.trim().split('\n').slice(1);
+    const csvNames = csvLines.map(l => l.split(',')[0]);
+
+    // With identity column, "José da Silva" with CPF 123.456.789-00 should get same name
+    // Row 0 and row 2 have same name+CPF → same fake name
+    expect(csvNames[0]).toBe(csvNames[2]);
+    expect(csvNames[0]).not.toBe('José da Silva');
+  });
 });

@@ -80,6 +80,7 @@ export function loadConfig(options: LoadConfigOptions): AnonymizeConfig {
     config = {
       locale: result.data.locale,
       rules: mergeRules(DEFAULT_CONFIG.rules, result.data.rules),
+      columnOverrides: result.data.columnOverrides,
     };
   } else {
     config = { ...DEFAULT_CONFIG };

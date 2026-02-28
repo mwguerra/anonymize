@@ -61,6 +61,12 @@ anonymize run ./dados/ --output ./dados-safe/ --yes
 # Dry run em diretório — ver plano sem modificar
 anonymize run ./dados/ --output ./dados-safe/ --dry-run
 
+# Anonimizar com agrupamento por identidade (CPF)
+anonymize run ./clientes.csv --identity-column cpf --yes
+
+# Múltiplos arquivos com identidade + consistência cruzada
+anonymize run ./clientes.csv ./pedidos.xlsx --output ./safe/ --identity-column cpf --yes
+
 # Inspecionar colunas detectadas
 anonymize inspect ./clientes.csv
 
@@ -83,6 +89,7 @@ anonymize config:show --config ./my-rules.json
 | `--encoding` | `-e` | Forçar encoding do CSV | Auto-detect |
 | `--delimiter` | | Forçar delimitador do CSV | Auto-detect |
 | `--locale` | `-l` | Override do locale do faker | `pt_BR` |
+| `--identity-column` | | Agrupar anonimização por coluna identidade (referencia um rule ID) | `undefined` |
 | `--no-overwrite` | | Falhar se arquivo de saída já existe | `false` |
 | `--verbose` | `-v` | Logs detalhados | `false` |
 | `--silent` | `-s` | Suprimir toda saída exceto erros | `false` |
@@ -105,14 +112,22 @@ A ferramenta busca configuração nesta ordem:
     {
       "id": "name",
       "columns": ["nome", "name", "nome_completo", "full_name"],
-      "generator": "faker.person.fullName()"
+      "generator": "faker.person.fullName()",
+      "identityColumn": "cpf"
     },
     {
       "id": "cpf",
       "columns": ["cpf", "cpf_cnpj", "documento"],
       "generator": "faker.helpers.replaceSymbols('###.###.###-##')"
     }
-  ]
+  ],
+  "columnOverrides": {
+    "name": [
+      { "file1.csv:Sheet1": "nome" },
+      { "file2.xlsx:Clientes": "Nome do Cliente" }
+    ],
+    "email": "correo_electronico"
+  }
 }
 ```
 
@@ -139,6 +154,45 @@ O campo `generator` aceita qualquer expressão válida do `@faker-js/faker`:
   "generator": "faker.date.birthdate({ min: 18, max: 80, mode: 'age' }).toISOString().split('T')[0]"
 }
 ```
+
+### Coluna de Identidade (`identityColumn`)
+
+Por padrão, todos os registros com o mesmo nome (ex: "Marcelo") recebem o mesmo nome fake. Com `identityColumn`, a anonimização é agrupada pela identidade real da pessoa:
+
+```json
+{
+  "id": "name",
+  "columns": ["nome"],
+  "generator": "faker.person.fullName()",
+  "identityColumn": "cpf"
+}
+```
+
+Se houver 8 registros "Marcelo" mas 5 CPFs distintos, serão gerados 5 nomes fake diferentes. Registros com mesmo CPF + mesmo nome → mesmo nome fake.
+
+Também disponível via CLI: `--identity-column cpf` (sobrescreve todas as regras).
+
+### Mapeamento de Colunas (`columnOverrides`)
+
+Quando arquivos diferentes usam nomes de colunas diferentes para os mesmos dados:
+
+```json
+{
+  "columnOverrides": {
+    "name": [
+      { "arquivo1.csv:Sheet1": "nome" },
+      { "arquivo2.xlsx:Clientes": "Nome do Cliente" }
+    ],
+    "email": "correo_electronico"
+  }
+}
+```
+
+- **String**: aplica para todos os arquivos (ex: `"email": "correo_electronico"`)
+- **Array de objetos**: mapeia por `arquivo:aba` (ex: `[{ "file.csv:Sheet1": "nome" }]`)
+- **Omitido**: usa o padrão (detecção por nome da coluna)
+
+Prioridade: `columnOverrides` > detecção por padrão.
 
 ## Como Funciona
 

@@ -2,7 +2,7 @@ import { mkdirSync, statSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
 import { loadConfig, type LoadConfigOptions } from '../config/loader.js';
 import { readFile } from '../io/reader.js';
-import { detectColumns } from './detector.js';
+import { detectColumns, type DetectColumnsOptions } from './detector.js';
 import { AnonymizationCache } from './cache.js';
 import { FakeValueGenerator, createFaker } from './generator.js';
 import { anonymize, resolveOutputPath, type AnonymizeContext, type AnonymizeHooks } from './anonymizer.js';
@@ -23,6 +23,7 @@ export interface MultiFileAnonymizeOptions {
   noOverwrite?: boolean;
   verbose?: boolean;
   silent?: boolean;
+  identityColumn?: string;
 }
 
 export interface MultiFileAnonymizeResult {
@@ -41,14 +42,19 @@ export interface FileDetection {
 export function detectAllFiles(
   inputPaths: string[],
   config: AnonymizeConfig,
-  options: { encoding?: string; delimiter?: string },
+  options: { encoding?: string; delimiter?: string; identityColumn?: string },
 ): FileDetection[] {
   return inputPaths.map((inputPath) => {
     const sheets = readFile(inputPath, {
       encoding: options.encoding,
       delimiter: options.delimiter,
     });
-    const mappings = detectColumns(sheets, config.rules);
+    const detectOpts: DetectColumnsOptions = {
+      columnOverrides: config.columnOverrides,
+      fileContext: basename(inputPath),
+      identityColumnOverride: options.identityColumn,
+    };
+    const mappings = detectColumns(sheets, config.rules, detectOpts);
     return { inputPath, sheets, mappings };
   });
 }
@@ -87,6 +93,7 @@ export async function anonymizeMultipleFiles(
   const detections = detectAllFiles(options.inputPaths, config, {
     encoding: options.encoding,
     delimiter: options.delimiter,
+    identityColumn: options.identityColumn,
   });
 
   const totalMappings = detections.reduce((sum, d) => sum + d.mappings.length, 0);
@@ -168,6 +175,7 @@ export async function anonymizeMultipleFiles(
           noOverwrite: options.noOverwrite,
           verbose: false,
           silent: true,
+          identityColumn: options.identityColumn,
         },
         { progress: hooks?.progress },
         sharedContext,
