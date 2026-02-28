@@ -6,8 +6,8 @@ import { promisify } from 'node:util';
 
 const exec = promisify(execFile);
 const CLI = join(import.meta.dirname, '..', '..', '..', 'src', 'index.ts');
-const INPUT = join(import.meta.dirname, '..', '..', 'input');
-const OUTPUT = join(import.meta.dirname, '..', '..', 'output');
+const INPUT = join(import.meta.dirname, '..', '..', 'examples', 'single_files', 'input');
+const OUTPUT = join(import.meta.dirname, '..', '..', 'examples', 'single_files', 'output');
 
 function run(args: string[]) {
   return exec('node', ['--import', 'jiti/register', CLI, ...args], { timeout: 30_000 });

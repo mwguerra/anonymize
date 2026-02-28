@@ -6,7 +6,7 @@ import { readXlsx } from '../../src/io/xlsx-reader.js';
 
 XLSX.set_fs(fs);
 
-const INPUT = join(import.meta.dirname, '..', 'input');
+const INPUT = join(import.meta.dirname, '..', 'examples', 'single_files', 'input');
 
 describe('readXlsx', () => {
   it('should read all sheets from XLSX', () => {

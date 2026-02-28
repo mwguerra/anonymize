@@ -8,8 +8,8 @@ import { FileNotFoundError, UnsupportedFormatError } from '../../src/utils/error
 
 XLSX.set_fs(fs);
 
-const INPUT = join(import.meta.dirname, '..', 'input');
-const OUTPUT = join(import.meta.dirname, '..', 'output');
+const INPUT = join(import.meta.dirname, '..', 'examples', 'single_files', 'input');
+const OUTPUT = join(import.meta.dirname, '..', 'examples', 'single_files', 'output');
 const tmpFiles: string[] = [];
 
 afterEach(() => {

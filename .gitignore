@@ -3,5 +3,5 @@ dist/
 *.tgz
 .taskmanager/
 .worktrees/
-tests/output/*
-!tests/output/.gitkeep
+tests/examples/single_files/output/*
+!tests/examples/single_files/output/.gitkeep
