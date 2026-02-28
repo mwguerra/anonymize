@@ -51,12 +51,12 @@ npm run lint:fix
 src/
 ├── index.ts              # CLI entry point — thin registrar: creates program, registers commands, calls parse()
 ├── commands/
-│   ├── run.ts            # `anonymize run <path>` — anonymize a file or directory
+│   ├── run.ts            # `anonymize run <paths...>` — anonymize file(s) or a directory
 │   ├── inspect.ts        # `anonymize inspect <file>` — show detected columns without modifying
 │   ├── config-init.ts    # `anonymize config:init` — scaffold .anonymizerc.json from defaults
 │   └── config-show.ts    # `anonymize config:show` — display resolved configuration
 ├── cli/
-│   ├── shared-options.ts # Reusable option helpers: addFileInputOptions, addOutputOptions, addVerbosityOptions
+│   ├── shared-options.ts # Reusable option helpers: addFileInputOptions (variadic), addSingleFileInputOptions, addOutputOptions, addVerbosityOptions
 │   ├── confirmation.ts   # inquirer interactive prompts (column confirmation/editing)
 │   ├── table-display.ts  # cli-table3 detection table rendering
 │   └── progress.ts       # cli-progress bar during processing
@@ -66,7 +66,8 @@ src/
 │   ├── cache.ts          # Global Map<ruleId, Map<originalValue, fakeValue>> — cross-sheet consistency
 │   ├── anonymize-cell.ts # Cell-level anonymization with cache lookup + collision retry
 │   ├── generator.ts      # faker wrapper + eval of generator expressions from config
-│   └── folder-anonymizer.ts # Recursive folder anonymization: walks tree, anonymizes supported files, copies the rest
+│   ├── folder-anonymizer.ts # Recursive folder anonymization: walks tree, anonymizes supported files, copies the rest
+│   └── multi-file-anonymizer.ts # Multi-file anonymization with shared cache for cross-file consistency
 ├── io/
 │   ├── reader.ts         # Unified file reader (CSV via papaparse, XLS/XLSX via SheetJS)
 │   ├── writer.ts         # Unified file writer — preserves structure, formatting, sheet order
@@ -89,12 +90,13 @@ src/
 - **Never modify the original file.** Output goes to `<name>.anonymized.<ext>` by default.
 - **Collision handling:** If faker generates a value already mapped to a different original, retry up to 10 times, then use the last attempt with a warning.
 - **Folder anonymization** walks the input tree file-by-file (not copy-then-modify). Supported files (.csv, .xls, .xlsx) are anonymized to the output directory; unsupported files are copied as-is. Files with no detected sensitive columns are also copied unchanged. `--output` is required for directory input.
+- **Multi-file anonymization** shares a single `AnonymizationCache` and `FakeValueGenerator` across all files, so the same original value maps to the same fake value regardless of which file it appears in. `--output` (directory) is required for multi-file mode. Cannot mix files and directories.
 
 ## CLI Commands
 
 | Command | Purpose |
 |---|---|
-| `anonymize run <path>` | Anonymize a file or directory (main command) |
+| `anonymize run <paths...>` | Anonymize file(s) or a directory (main command) |
 | `anonymize inspect <file>` | Show detected columns without modifying anything |
 | `anonymize config:init` | Scaffold `.anonymizerc.json` in current directory |
 | `anonymize config:show` | Display resolved configuration |

@@ -42,6 +42,11 @@ export interface AnonymizeHooks {
   progress?: ProgressTracker;
 }
 
+export interface AnonymizeContext {
+  cache: AnonymizationCache;
+  generator: FakeValueGenerator;
+}
+
 export interface AnonymizeResult {
   outputPath: string;
   totalCellsAnonymized: number;
@@ -59,7 +64,7 @@ export function resolveOutputPath(inputPath: string, outputOverride?: string): s
   return join(dir, `${base}.anonymized${ext}`);
 }
 
-export async function anonymize(options: AnonymizeOptions, hooks?: AnonymizeHooks): Promise<AnonymizeResult> {
+export async function anonymize(options: AnonymizeOptions, hooks?: AnonymizeHooks, context?: AnonymizeContext): Promise<AnonymizeResult> {
   const logger = new Logger({
     verbose: options.verbose ?? false,
     silent: options.silent ?? false,
@@ -131,10 +136,9 @@ export async function anonymize(options: AnonymizeOptions, hooks?: AnonymizeHook
     throw new OverwriteError(outputPath);
   }
 
-  // 6. Initialize cache and generator
-  const faker = await createFaker(config.locale);
-  const cache = new AnonymizationCache();
-  const generator = new FakeValueGenerator(faker);
+  // 6. Initialize cache and generator (use shared context if provided)
+  const cache = context?.cache ?? new AnonymizationCache();
+  const generator = context?.generator ?? new FakeValueGenerator(await createFaker(config.locale));
   const deps: AnonymizeCellDeps = { cache, generator, logger };
 
   // 7. Build lookup for quick column matching

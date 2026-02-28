@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { existsSync, readFileSync, rmSync } from 'node:fs';
 import { anonymizeFolder } from '../../src/core/folder-anonymizer.js';
 
-const FOLDER_INPUT = join(import.meta.dirname, '..', 'examples', 'folders', 'input');
+const FOLDER_INPUT = join(import.meta.dirname, '..', 'examples', '3_folders', 'input');
 
 const tmpDirs: string[] = [];
 

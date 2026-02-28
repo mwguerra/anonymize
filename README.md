@@ -26,7 +26,7 @@ anonymize <comando> [opções]
 
 | Comando | Descrição |
 |---|---|
-| `anonymize run <caminho>` | Anonimizar um arquivo ou diretório (comando principal) |
+| `anonymize run <caminhos...>` | Anonimizar arquivo(s) ou diretório (comando principal) |
 | `anonymize inspect <arquivo>` | Mostrar colunas detectadas sem modificar nada |
 | `anonymize config:init` | Criar `.anonymizerc.json` no diretório atual |
 | `anonymize config:show` | Exibir configuração resolvida |
@@ -48,6 +48,12 @@ anonymize run ./clientes.csv --dry-run
 
 # Config customizada com locale inglês
 anonymize run ./customers.csv --config ./my-rules.json --locale en_US
+
+# Anonimizar múltiplos arquivos com consistência cruzada (requer --output com diretório)
+anonymize run ./clientes.csv ./pedidos.xlsx --output ./safe/ --yes
+
+# Dry run em múltiplos arquivos
+anonymize run ./a.csv ./b.xlsx --output ./safe/ --dry-run
 
 # Anonimizar diretório inteiro (requer --output)
 anonymize run ./dados/ --output ./dados-safe/ --yes
@@ -143,6 +149,14 @@ O campo `generator` aceita qualquer expressão válida do `@faker-js/faker`:
 4. Percorre cada célula marcada, substituindo por valores fake via `@faker-js/faker`
 5. Mantém cache global: o mesmo valor original → mesmo valor fake (inclusive entre abas)
 6. Gera arquivo de saída preservando estrutura e formatação
+
+### Múltiplos arquivos
+1. Lê todos os arquivos de entrada e detecta colunas sensíveis em cada um
+2. Exibe tabela unificada de detecção para confirmação (pular com `--yes`)
+3. Cria um cache único compartilhado entre todos os arquivos
+4. Processa cada arquivo sequencialmente usando o cache compartilhado
+5. O mesmo valor original → mesmo valor fake em todos os arquivos (ex: "José" em `a.csv` e `b.xlsx` → mesmo nome fake)
+6. `--output` (diretório) é obrigatório. Não é permitido misturar arquivos e diretórios.
 
 ### Diretório
 1. Percorre recursivamente o diretório de entrada

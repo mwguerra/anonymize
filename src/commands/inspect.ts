@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { addFileInputOptions, addVerbosityOptions } from '../cli/shared-options.js';
+import { addSingleFileInputOptions, addVerbosityOptions } from '../cli/shared-options.js';
 import { loadConfig } from '../config/loader.js';
 import { readFile } from '../io/reader.js';
 import { detectColumns } from '../core/detector.js';
@@ -12,7 +12,7 @@ export function registerInspectCommand(program: Command): void {
     .command('inspect')
     .description('Show detected sensitive columns without modifying anything');
 
-  addFileInputOptions(cmd);
+  addSingleFileInputOptions(cmd);
   addVerbosityOptions(cmd);
 
   cmd.action(async () => {

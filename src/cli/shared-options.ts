@@ -2,7 +2,16 @@ import type { Command } from 'commander';
 
 export function addFileInputOptions(cmd: Command): Command {
   return cmd
-    .argument('<path>', 'Input file (.csv, .xls, .xlsx) or directory')
+    .argument('<paths...>', 'Input file(s) (.csv, .xls, .xlsx) or a single directory')
+    .option('-e, --encoding <encoding>', 'Force CSV encoding (overrides auto-detection)')
+    .option('--delimiter <char>', 'Force CSV delimiter (overrides auto-detection)')
+    .option('-c, --config <path>', 'Configuration file path')
+    .option('-l, --locale <locale>', 'Override faker locale');
+}
+
+export function addSingleFileInputOptions(cmd: Command): Command {
+  return cmd
+    .argument('<path>', 'Input file (.csv, .xls, .xlsx)')
     .option('-e, --encoding <encoding>', 'Force CSV encoding (overrides auto-detection)')
     .option('--delimiter <char>', 'Force CSV delimiter (overrides auto-detection)')
     .option('-c, --config <path>', 'Configuration file path')

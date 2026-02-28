@@ -6,7 +6,7 @@ import { promisify } from 'node:util';
 
 const exec = promisify(execFile);
 const CLI = join(import.meta.dirname, '..', '..', '..', 'src', 'index.ts');
-const FOLDER_INPUT = join(import.meta.dirname, '..', '..', 'examples', 'folders', 'input');
+const FOLDER_INPUT = join(import.meta.dirname, '..', '..', 'examples', '3_folders', 'input');
 
 function run(args: string[]) {
   return exec('node', ['--import', 'jiti/register', CLI, ...args], { timeout: 60_000 });

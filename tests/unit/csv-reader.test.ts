@@ -3,8 +3,8 @@ import { join } from 'node:path';
 import * as fs from 'node:fs';
 import { readCsv } from '../../src/io/csv-reader.js';
 
-const INPUT = join(import.meta.dirname, '..', 'examples', 'single_files', 'input');
-const OUTPUT = join(import.meta.dirname, '..', 'examples', 'single_files', 'output');
+const INPUT = join(import.meta.dirname, '..', 'examples', '1_single_files', 'input');
+const OUTPUT = join(import.meta.dirname, '..', 'examples', '1_single_files', 'output');
 
 const tmpFiles: string[] = [];
 afterEach(() => {

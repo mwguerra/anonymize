@@ -1,6 +1,6 @@
 # Folder Test Fixtures
 
-Test fixtures for folder-based (recursive) anonymization. Each file is a copy of the base fixtures from `tests/examples/single_files/input/`, prefixed to indicate its location in the hierarchy.
+Test fixtures for folder-based (recursive) anonymization. Each file is a copy of the base fixtures from `tests/examples/1_single_files/input/`, prefixed to indicate its location in the hierarchy.
 
 ## Prefix Convention
 
